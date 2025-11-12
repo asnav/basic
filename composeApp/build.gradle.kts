@@ -44,7 +44,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation("io.appwrite:sdk-for-android:8.1.0")
+            implementation(libs.appwrite.android)
 
         }
         commonMain.dependencies {
@@ -56,6 +56,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.kotlinx.coroutinesCore)
             implementation(projects.shared)
         }
         commonTest.dependencies {

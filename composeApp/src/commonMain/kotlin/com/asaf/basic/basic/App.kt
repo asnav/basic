@@ -1,48 +1,44 @@
 package com.asaf.basic.basic
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Surface
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import com.asaf.basic.basic.state.Screen
+import com.asaf.basic.basic.state.rememberAppState
+import com.asaf.basic.basic.ui.screen.HomeScreen
+import com.asaf.basic.basic.ui.screen.LoginScreen
+import com.asaf.basic.basic.ui.screen.SecondScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import basic.composeapp.generated.resources.Res
-import basic.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
+        val appState = rememberAppState()
+
+        Surface(modifier = Modifier.fillMaxSize()) {
+            when (val s = appState.screen) {
+                Screen.Login -> LoginScreen(
+                    onLoginSuccess = { user -> appState.onLoginSuccess(user) }
+                )
+                is Screen.Home -> {
+                    HomeScreen(
+                        user = s.user,
+                        onLogout = { appState.logout() },
+                        onNavigateSecond = { appState.toSecond() }
+                    )
                 }
+                is Screen.Second -> SecondScreen(
+                    user = s.user,
+                    onBack = { appState.backFromSecond() }
+                )
             }
         }
     }
