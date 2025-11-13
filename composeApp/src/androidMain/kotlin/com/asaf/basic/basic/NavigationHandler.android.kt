@@ -7,10 +7,10 @@ import androidx.compose.runtime.rememberUpdatedState
 
 private object NavigationStoreAndroid {
     val listeners = mutableSetOf<(String?) -> Unit>()
-    private val backStack = mutableListOf<String>()
-    private val forwardStack = mutableListOf<String>()
+    private val stack = mutableListOf<String>()
+    private var index = -1
 
-    fun current(): String? = backStack.lastOrNull()
+    fun current(): String? = if (index in stack.indices) stack[index] else null
 
     private fun notifyAllListeners() {
         val cur = current()
@@ -18,40 +18,39 @@ private object NavigationStoreAndroid {
     }
 
     fun push(route: String) {
-        // Push new route and clear forward stack (like web browser)
-        backStack.add(route)
-        forwardStack.clear()
+        // Drop forward history if we are not at the end
+        while (stack.lastIndex > index) stack.removeAt(stack.lastIndex)
+        stack.add(route)
+        index = stack.lastIndex
         notifyAllListeners()
     }
 
     fun replace(route: String) {
-        if (backStack.isEmpty()) {
-            backStack.add(route)
+        if (index == -1) {
+            stack.add(route)
+            index = 0
         } else {
-            backStack[backStack.lastIndex] = route
+            stack[index] = route
         }
-        // Replace does not touch forward stack
         notifyAllListeners()
     }
 
     fun back() {
-        if (backStack.size > 1) {
-            val removed = backStack.removeAt(backStack.lastIndex)
-            forwardStack.add(removed)
+        if (index > 0) {
+            index -= 1
             notifyAllListeners()
         }
     }
 
     fun forward() {
-        if (forwardStack.isNotEmpty()) {
-            val next = forwardStack.removeAt(forwardStack.lastIndex)
-            backStack.add(next)
+        if (index < stack.lastIndex) {
+            index += 1
             notifyAllListeners()
         }
     }
 
-    fun canBack(): Boolean = backStack.size > 1
-    fun canForward(): Boolean = forwardStack.isNotEmpty()
+    fun canBack(): Boolean = index > 0
+    fun canForward(): Boolean = index in 0 until stack.lastIndex
 }
 
 @Composable
