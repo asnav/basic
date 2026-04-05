@@ -1,19 +1,13 @@
 package com.asaf.basic.basic.state
 
-import androidx.compose.runtime.*
-import com.asaf.basic.basic.NavigationListener
-import com.asaf.basic.basic.navigationBack
-import com.asaf.basic.basic.navigationCurrentRoute
-import com.asaf.basic.basic.navigationForward
-import com.asaf.basic.basic.navigationPush
-import com.asaf.basic.basic.navigationReplace
-
-// Public screen model so feature modules/screens can reference it if needed
-sealed class Screen {
-    data object Login : Screen()
-    data class Home(val user: String) : Screen()
-    data class Second(val user: String) : Screen()
-}
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.asaf.basic.basic.Navigation
 
 class AppState internal constructor(
     screenState: MutableState<Screen>,
@@ -26,12 +20,12 @@ class AppState internal constructor(
     fun onLoginSuccess(user: String) {
         lastUser = user
         screen = Screen.Home(user)
-        navigationPush("home")
+        Navigation.push(Screen.Home(user))
     }
 
     fun logout() {
         screen = Screen.Login
-        navigationReplace("login")
+        Navigation.replace(Screen.Login)
     }
 
     fun toSecond() {
@@ -40,16 +34,17 @@ class AppState internal constructor(
             is Screen.Second -> s.user
             Screen.Login -> lastUser
         } ?: return
-        screen = Screen.Second(u)
-        navigationPush("second")
+        val next = Screen.Second(u)
+        screen = next
+        Navigation.push(next)
     }
 
     fun backFromSecond() {
-        navigationBack()
+        Navigation.back()
     }
 
     fun forward() {
-        navigationForward()
+        Navigation.forward()
     }
 }
 
@@ -58,28 +53,21 @@ fun rememberAppState(): AppState {
     val screenState = remember { mutableStateOf<Screen>(Screen.Login) }
     val lastUserState = remember { mutableStateOf<String?>(null) }
 
-    // Listen to unified navigation and map routes to screens
-    NavigationListener { route ->
-        when (route) {
-            "login" -> {
-                screenState.value = Screen.Login
+    // Listen to unified navigation and map to screens directly
+    Navigation.addListener { screen ->
+        if (screen != null) {
+            screenState.value = when (screen) {
+                Screen.Login -> Screen.Login
+                is Screen.Home -> screen.apply { lastUserState.value = user }
+                is Screen.Second -> screen.apply { lastUserState.value = user }
             }
-            "home" -> {
-                val u = lastUserState.value
-                screenState.value = if (u != null) Screen.Home(u) else Screen.Login
-            }
-            "second" -> {
-                val u = lastUserState.value
-                screenState.value = if (u != null) Screen.Second(u) else Screen.Login
-            }
-            else -> Unit
         }
     }
 
     // Ensure an initial route exists for correct forward/back behavior.
     DisposableEffect(Unit) {
-        if (navigationCurrentRoute() == null) {
-            navigationReplace("login")
+        if (Navigation.current() == null) {
+            Navigation.replace(Screen.Login)
         }
         onDispose { }
     }

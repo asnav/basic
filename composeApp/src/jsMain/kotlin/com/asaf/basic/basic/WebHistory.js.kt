@@ -14,7 +14,7 @@ private fun buildState(route: String): dynamic {
 }
 
 @Composable
-actual fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
+fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
     val current = rememberUpdatedState(onRouteChange)
     DisposableEffect(Unit) {
         val listener = EventListener { ev ->
@@ -22,7 +22,9 @@ actual fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
             val route = try {
                 val s = pe?.state
                 if (s == null) null else (s.asDynamic().route as? String)
-            } catch (_: dynamic) { null }
+            } catch (_: dynamic) {
+                null
+            }
             current.value(route)
         }
         window.addEventListener("popstate", listener)
@@ -32,9 +34,9 @@ actual fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
     }
 }
 
-actual fun webHistorySupported(): Boolean = true
+fun webHistorySupported(): Boolean = true
 
-actual fun webHistoryPush(route: String) {
+fun webHistoryPush(route: String) {
     try {
         window.history.pushState(buildState(route), "")
     } catch (_: dynamic) {
@@ -42,7 +44,7 @@ actual fun webHistoryPush(route: String) {
     }
 }
 
-actual fun webHistoryReplace(route: String) {
+fun webHistoryReplace(route: String) {
     try {
         window.history.replaceState(buildState(route), "")
     } catch (_: dynamic) {
@@ -50,13 +52,15 @@ actual fun webHistoryReplace(route: String) {
     }
 }
 
-actual fun webHistoryBack() {
+fun webHistoryBack() {
     window.history.back()
 }
 
-actual fun webHistoryCurrentRoute(): String? {
+fun webHistoryCurrentRoute(): String? {
     return try {
         val s = window.history.state
         if (s == null) null else (s.asDynamic().route as? String)
-    } catch (_: dynamic) { null }
+    } catch (_: dynamic) {
+        null
+    }
 }

@@ -6,7 +6,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.browser.window
 
 @Composable
-actual fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
+fun WebHistoryListener(onRouteChange: (String?) -> Unit) {
     val current = rememberUpdatedState(onRouteChange)
     DisposableEffect(Unit) {
         val hashListener: (org.w3c.dom.events.Event) -> Unit = {
@@ -25,20 +25,20 @@ private fun currentHashRoute(): String? {
     return hash.removePrefix("#/").ifBlank { null }
 }
 
-actual fun webHistorySupported(): Boolean = true
+fun webHistorySupported(): Boolean = true
 
-actual fun webHistoryPush(route: String) {
+fun webHistoryPush(route: String) {
     // Update the hash; this creates a new history entry and enables forward/back.
     window.location.hash = "/$route"
 }
 
-actual fun webHistoryReplace(route: String) {
+fun webHistoryReplace(route: String) {
     // Replace current history entry's hash without adding a new entry.
     runCatching { window.history.replaceState(data = null, title = "", url = "#/$route") }
 }
 
-actual fun webHistoryBack() {
+fun webHistoryBack() {
     window.history.back()
 }
 
-actual fun webHistoryCurrentRoute(): String? = currentHashRoute()
+fun webHistoryCurrentRoute(): String? = currentHashRoute()
